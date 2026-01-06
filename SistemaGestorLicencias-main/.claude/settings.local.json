@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s /b *.iml)",
+      "Bash(where:*)",
+      "Bash(\"./gradlew.bat\" clean build)"
+    ]
+  }
+}

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="ec.edu.sistemalicencias.view.ValidarDocumentosView">
+  <grid id="27dc6" binding="panelPrincipal" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="15" left="15" bottom="15" right="15"/>
+    <constraints>
+      <xy x="20" y="20" width="750" height="700"/>
+    </constraints>
+    <properties>
+      <minimumSize width="750" height="700"/>
+      <preferredSize width="750" height="700"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <grid id="a1b2c" binding="panelBusqueda" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="1a2b3" class="javax.swing.JLabel">
+            <constraints/>
+            <properties>
+              <text value="Cédula:"/>
+            </properties>
+          </component>
+          <component id="2b3c4" class="javax.swing.JTextField" binding="txtCedula">
+            <constraints/>
+            <properties>
+              <columns value="15"/>
+            </properties>
+          </component>
+          <component id="3c4d5" class="javax.swing.JButton" binding="btnBuscar">
+            <constraints/>
+            <properties>
+              <text value="Buscar"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <scrollpane id="b2c3d" binding="scrollInfo">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="2" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="line" title="Información del Conductor"/>
+        <children>
+          <component id="c3d4e" class="javax.swing.JTextArea" binding="txtInfo">
+            <constraints/>
+            <properties>
+              <editable value="false"/>
+              <rows value="6"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+      <grid id="d4e5f" binding="panelDocumentos" layout-manager="GridLayoutManager" row-count="9" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="5">
+        <margin top="10" left="10" bottom="10" right="10"/>
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="line" title="Documentos Requeridos - Verificar Entrega"/>
+        <children>
+          <component id="chk1" class="javax.swing.JCheckBox" binding="chkTituloConductor">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="1. Original del título de conductor no profesional"/>
+            </properties>
+          </component>
+          <component id="chk2" class="javax.swing.JCheckBox" binding="chkPermisoAprendizaje">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="2. Original del permiso de aprendizaje"/>
+            </properties>
+          </component>
+          <component id="chk3" class="javax.swing.JCheckBox" binding="chkExamenPsicosensometrico">
+            <constraints>
+              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="3. Original del examen psicosensométrico"/>
+            </properties>
+          </component>
+          <component id="chk4" class="javax.swing.JCheckBox" binding="chkCedulaPapeleta">
+            <constraints>
+              <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="4. Cédula de identidad original y papeleta de votación vigente"/>
+            </properties>
+          </component>
+          <component id="chk5" class="javax.swing.JCheckBox" binding="chkCertificadoSangre">
+            <constraints>
+              <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="5. Original del certificado de tipo sanguíneo (Cruz Roja Ecuatoriana)"/>
+            </properties>
+          </component>
+          <component id="chk6" class="javax.swing.JCheckBox" binding="chkComprobantePago">
+            <constraints>
+              <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="6. Original del comprobante de pago"/>
+            </properties>
+          </component>
+          <component id="sep1" class="javax.swing.JSeparator">
+            <constraints>
+              <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+          </component>
+          <component id="chk7" class="javax.swing.JCheckBox" binding="chkTurnoImpreso">
+            <constraints>
+              <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="7. Turno impreso"/>
+            </properties>
+          </component>
+          <component id="chk8" class="javax.swing.JCheckBox" binding="chkCertificadoEducacion">
+            <constraints>
+              <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="8. Certificado de educación básica culminada"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <grid id="h8i9j" binding="panelBotones" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="btn1" class="javax.swing.JButton" binding="btnMarcarTodos">
+            <constraints/>
+            <properties>
+              <text value="Marcar Todos"/>
+            </properties>
+          </component>
+          <component id="btn2" class="javax.swing.JButton" binding="btnDesmarcarTodos">
+            <constraints/>
+            <properties>
+              <text value="Desmarcar Todos"/>
+            </properties>
+          </component>
+          <component id="i9j0k" class="javax.swing.JButton" binding="btnGuardar">
+            <constraints/>
+            <properties>
+              <text value="Guardar Validación"/>
+            </properties>
+          </component>
+          <component id="j0k1l" class="javax.swing.JButton" binding="btnCerrar">
+            <constraints/>
+            <properties>
+              <text value="Cerrar"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+    </children>
+  </grid>
+</form>

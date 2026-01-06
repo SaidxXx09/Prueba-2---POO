@@ -1,0 +1,4 @@
+# Project exclude paths
+/SistemaGestorLicencias-main/.gradle/
+/SistemaGestorLicencias-main/build/
+/SistemaGestorLicencias-main/build/classes/java/main/
