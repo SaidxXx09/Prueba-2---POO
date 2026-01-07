@@ -39,11 +39,14 @@ public class Main {
                 return;
             }
 
+
             // Iniciar ventana principal
             MainView mainView = new MainView();
             mainView.setVisible(true);
         });
     }
+
+
 
     /**
      * Muestra una pantalla de inicio con información del sistema

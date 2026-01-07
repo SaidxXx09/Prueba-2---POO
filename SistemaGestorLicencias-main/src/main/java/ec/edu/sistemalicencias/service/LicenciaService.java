@@ -11,7 +11,6 @@ import ec.edu.sistemalicencias.model.exceptions.BaseDatosException;
 import ec.edu.sistemalicencias.model.exceptions.DocumentoInvalidoException;
 import ec.edu.sistemalicencias.model.exceptions.LicenciaException;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -28,6 +27,7 @@ public class LicenciaService {
     private final PruebaPsicometricaDAO pruebaPsicometricaDAO;
     private final LicenciaDAO licenciaDAO;
 
+    // Controlador Servicio Repository
     /**
      * Constructor que inicializa los DAOs
      */

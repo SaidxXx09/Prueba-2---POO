@@ -24,6 +24,7 @@ import java.util.List;
 public class LicenciaController {
 
     // Servicio de negocio (capa de modelo)
+    // Controller - Service - Repository
     private final LicenciaService licenciaService;
 
     /**
