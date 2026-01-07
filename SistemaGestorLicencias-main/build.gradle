@@ -14,8 +14,10 @@ repositories {
 }
 
 dependencies {
-    // MySQL Connector
-    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    // --- CAMBIO CLAVE PARA RAILWAY ---
+
+    implementation 'org.postgresql:postgresql:42.7.2'
 
     // iText PDF para generación de documentos
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
@@ -28,25 +30,11 @@ dependencies {
 }
 
 application {
-    mainClass = 'ec.edu.sistemalicencias.Main'
+    // Configura el Login como la ventana de inicio
+    mainClass = 'ec.edu.sistemalicencias.view.LoginView'
 }
 
 // Configuración para encoding UTF-8
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
-}
-
-// Tarea para compilar los archivos .form de IntelliJ IDEA
-task compileJava2(type: JavaCompile) {
-    dependsOn compileJava
-}
-
-// Instruir a IntelliJ IDEA para que compile los GUI Forms
-// Esto se hace automáticamente cuando se compila desde IntelliJ
-// Para Gradle, asegurarse de que IntelliJ esté configurado para usar su propio compilador
-tasks.named('compileJava') {
-    doFirst {
-        println 'IMPORTANTE: Asegúrese de compilar desde IntelliJ IDEA para que los archivos .form se procesen correctamente'
-        println 'O configure: Settings -> Build, Execution, Deployment -> Build Tools -> Gradle -> Build and run using: IntelliJ IDEA'
-    }
 }
