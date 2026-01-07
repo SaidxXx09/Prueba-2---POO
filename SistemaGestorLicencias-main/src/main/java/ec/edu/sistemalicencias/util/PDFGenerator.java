@@ -12,41 +12,37 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Utilidad para generar documentos PDF de licencias de conducir.
- * Usa iText para la generación de documentos.
- *
- * @author Sistema Licencias Ecuador
- * @version 1.0
- */
 public class PDFGenerator {
 
-    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final Font FONT_TITULO = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.DARK_GRAY);
-    private static final Font FONT_SUBTITULO = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLUE);
-    private static final Font FONT_NORMAL = FontFactory.getFont(FontFactory.HELVETICA, 11, BaseColor.BLACK);
-    private static final Font FONT_CAMPO = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.BLACK);
+    // ===================== FORMATOS =====================
+    private static final DateTimeFormatter FORMATO_FECHA =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    /**
-     * Genera un documento PDF de licencia de conducir
-     * @param licencia Licencia a generar
-     * @param conductor Conductor propietario
-     * @param prueba Prueba psicométrica asociada (puede ser null)
-     * @param rutaArchivo Ruta donde se guardará el PDF
-     * @throws DocumentException Si hay error al generar el documento
-     * @throws IOException Si hay error al escribir el archivo
-     */
-    public static void generarLicenciaPDF(Licencia licencia, Conductor conductor,
-                                          PruebaPsicometrica prueba, String rutaArchivo)
+    // ===================== FUENTES =====================
+    private static final Font FONT_TITULO =
+            FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
+
+    private static final Font FONT_SUBTITULO =
+            FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.BLACK);
+
+    private static final Font FONT_CAMPO =
+            FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.BLACK);
+
+    private static final Font FONT_NORMAL =
+            FontFactory.getFont(FontFactory.HELVETICA, 11, BaseColor.BLACK);
+
+    // ===================== MÉTODO PRINCIPAL =====================
+    public static void generarLicenciaPDF(Licencia licencia,
+                                          Conductor conductor,
+                                          PruebaPsicometrica prueba,
+                                          String rutaArchivo)
             throws DocumentException, IOException {
 
-        // Crear documento PDF
         Document documento = new Document(PageSize.A4);
         PdfWriter.getInstance(documento, new FileOutputStream(rutaArchivo));
 
         documento.open();
 
-        // Agregar contenido al documento
         agregarEncabezado(documento);
         agregarDatosConductor(documento, conductor);
         agregarDatosLicencia(documento, licencia);
@@ -56,240 +52,121 @@ public class PDFGenerator {
         }
 
         agregarPiePagina(documento);
-
         documento.close();
     }
 
-    /**
-     * Agrega el encabezado del documento
-     */
+    // ===================== ENCABEZADO =====================
     private static void agregarEncabezado(Document documento) throws DocumentException {
-        // Título principal
+
         Paragraph titulo = new Paragraph("REPÚBLICA DEL ECUADOR", FONT_TITULO);
         titulo.setAlignment(Element.ALIGN_CENTER);
-        titulo.setSpacingAfter(10);
         documento.add(titulo);
 
-        // Subtítulo
         Paragraph subtitulo = new Paragraph("AGENCIA NACIONAL DE TRÁNSITO", FONT_SUBTITULO);
         subtitulo.setAlignment(Element.ALIGN_CENTER);
-        subtitulo.setSpacingAfter(5);
         documento.add(subtitulo);
 
-        // Tipo de documento
-        Paragraph tipoDoc = new Paragraph("LICENCIA DE CONDUCIR", FONT_SUBTITULO);
-        tipoDoc.setAlignment(Element.ALIGN_CENTER);
-        tipoDoc.setSpacingAfter(20);
-        documento.add(tipoDoc);
+        Paragraph tipo = new Paragraph("LICENCIA DE CONDUCIR", FONT_SUBTITULO);
+        tipo.setAlignment(Element.ALIGN_CENTER);
+        tipo.setSpacingAfter(15);
+        documento.add(tipo);
 
-        // Línea separadora
         LineSeparator linea = new LineSeparator();
         linea.setLineColor(BaseColor.BLUE);
         documento.add(linea);
         documento.add(Chunk.NEWLINE);
     }
 
-    /**
-     * Agrega los datos del conductor
-     */
-    private static void agregarDatosConductor(Document documento, Conductor conductor)
+    // ===================== DATOS CONDUCTOR =====================
+    private static void agregarDatosConductor(Document documento, Conductor c)
             throws DocumentException {
 
-        Paragraph seccion = new Paragraph("DATOS DEL CONDUCTOR", FONT_SUBTITULO);
-        seccion.setSpacingBefore(10);
-        seccion.setSpacingAfter(10);
-        documento.add(seccion);
+        documento.add(new Paragraph("DATOS DEL CONDUCTOR", FONT_SUBTITULO));
 
-        // Crear tabla para datos del conductor
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
         tabla.setSpacingAfter(15);
 
-        // Configurar anchos de columnas
-        float[] columnWidths = {40f, 60f};
-        tabla.setWidths(columnWidths);
-
-        // Agregar filas
-        agregarFilaTabla(tabla, "Cédula:", conductor.getCedula());
-        agregarFilaTabla(tabla, "Nombres:", conductor.getNombres());
-        agregarFilaTabla(tabla, "Apellidos:", conductor.getApellidos());
+        agregarFilaTabla(tabla, "Cédula:", c.getCedula());
+        agregarFilaTabla(tabla, "Nombres:", c.getNombres());
+        agregarFilaTabla(tabla, "Apellidos:", c.getApellidos());
         agregarFilaTabla(tabla, "Fecha de Nacimiento:",
-                conductor.getFechaNacimiento().format(FORMATO_FECHA));
-        agregarFilaTabla(tabla, "Edad:", conductor.calcularEdad() + " años");
-
-        if (conductor.getTipoSangre() != null) {
-            agregarFilaTabla(tabla, "Tipo de Sangre:", conductor.getTipoSangre().toString());
-        }
-
-        if (conductor.getDireccion() != null && !conductor.getDireccion().isEmpty()) {
-            agregarFilaTabla(tabla, "Dirección:", conductor.getDireccion());
-        }
-
-        if (conductor.getTelefono() != null && !conductor.getTelefono().isEmpty()) {
-            agregarFilaTabla(tabla, "Teléfono:", conductor.getTelefono());
-        }
-
-        if (conductor.getEmail() != null && !conductor.getEmail().isEmpty()) {
-            agregarFilaTabla(tabla, "Email:", conductor.getEmail());
-        }
+                c.getFechaNacimiento().format(FORMATO_FECHA));
+        agregarFilaTabla(tabla, "Edad:", c.calcularEdad() + " años");
 
         documento.add(tabla);
     }
 
-    /**
-     * Agrega los datos de la licencia
-     */
-    private static void agregarDatosLicencia(Document documento, Licencia licencia)
+    // ===================== DATOS LICENCIA =====================
+    private static void agregarDatosLicencia(Document documento, Licencia l)
             throws DocumentException {
 
-        Paragraph seccion = new Paragraph("DATOS DE LA LICENCIA", FONT_SUBTITULO);
-        seccion.setSpacingBefore(10);
-        seccion.setSpacingAfter(10);
-        documento.add(seccion);
+        documento.add(new Paragraph("DATOS DE LA LICENCIA", FONT_SUBTITULO));
 
-        // Crear tabla para datos de licencia
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
         tabla.setSpacingAfter(15);
 
-        float[] columnWidths = {40f, 60f};
-        tabla.setWidths(columnWidths);
-
-        // Agregar filas
-        agregarFilaTabla(tabla, "Número de Licencia:", licencia.getNumeroLicencia());
-        agregarFilaTabla(tabla, "Tipo:", TipoLicenciaConstantes.obtenerNombre(licencia.getTipoLicencia()));
-        agregarFilaTabla(tabla, "Fecha de Emisión:",
-                licencia.getFechaEmision().format(FORMATO_FECHA));
-        agregarFilaTabla(tabla, "Fecha de Vencimiento:",
-                licencia.getFechaVencimiento().format(FORMATO_FECHA));
-        agregarFilaTabla(tabla, "Estado:", licencia.obtenerEstado());
+        agregarFilaTabla(tabla, "Número:", l.getNumeroLicencia());
+        agregarFilaTabla(tabla, "Tipo:",
+                TipoLicenciaConstantes.obtenerNombre(l.getTipoLicencia()));
+        agregarFilaTabla(tabla, "Emisión:",
+                l.getFechaEmision().format(FORMATO_FECHA));
+        agregarFilaTabla(tabla, "Vencimiento:",
+                l.getFechaVencimiento().format(FORMATO_FECHA));
+        agregarFilaTabla(tabla, "Estado:", l.obtenerEstado());
 
         documento.add(tabla);
-
-        // Cuadro destacado con información importante
-        PdfPTable cuadroImportante = new PdfPTable(1);
-        cuadroImportante.setWidthPercentage(100);
-        cuadroImportante.setSpacingBefore(10);
-        cuadroImportante.setSpacingAfter(15);
-
-        PdfPCell celda = new PdfPCell();
-        celda.setBackgroundColor(new BaseColor(230, 240, 255));
-        celda.setBorderColor(BaseColor.BLUE);
-        celda.setBorderWidth(2);
-        celda.setPadding(10);
-
-        Paragraph importante = new Paragraph();
-        importante.add(new Chunk("VÁLIDA HASTA: ", FONT_CAMPO));
-        importante.add(new Chunk(licencia.getFechaVencimiento().format(FORMATO_FECHA),
-                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.RED)));
-        importante.setAlignment(Element.ALIGN_CENTER);
-
-        celda.addElement(importante);
-        cuadroImportante.addCell(celda);
-        documento.add(cuadroImportante);
     }
 
-    /**
-     * Agrega los datos de la prueba psicométrica
-     */
-    private static void agregarDatosPrueba(Document documento, PruebaPsicometrica prueba)
+    // ===================== PRUEBA PSICOMÉTRICA =====================
+    private static void agregarDatosPrueba(Document documento, PruebaPsicometrica p)
             throws DocumentException {
 
-        Paragraph seccion = new Paragraph("PRUEBA PSICOMÉTRICA", FONT_SUBTITULO);
-        seccion.setSpacingBefore(10);
-        seccion.setSpacingAfter(10);
-        documento.add(seccion);
+        documento.add(new Paragraph("PRUEBA PSICOMÉTRICA", FONT_SUBTITULO));
 
-        // Crear tabla para notas
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(100);
-        tabla.setSpacingAfter(15);
 
-        float[] columnWidths = {60f, 40f};
-        tabla.setWidths(columnWidths);
-
-        // Agregar filas con notas
-        agregarFilaTabla(tabla, "Reacción:", String.format("%.2f", prueba.getNotaReaccion()));
-        agregarFilaTabla(tabla, "Atención:", String.format("%.2f", prueba.getNotaAtencion()));
-        agregarFilaTabla(tabla, "Coordinación:", String.format("%.2f", prueba.getNotaCoordinacion()));
-        agregarFilaTabla(tabla, "Percepción:", String.format("%.2f", prueba.getNotaPercepcion()));
-        agregarFilaTabla(tabla, "Evaluación Psicológica:", String.format("%.2f", prueba.getNotaPsicologica()));
-
-        // Fila de promedio destacada
-        PdfPCell celdaCampo = new PdfPCell(new Phrase("PROMEDIO:", FONT_CAMPO));
-        celdaCampo.setBackgroundColor(new BaseColor(240, 240, 240));
-        celdaCampo.setPadding(5);
-        tabla.addCell(celdaCampo);
-
-        PdfPCell celdaValor = new PdfPCell(new Phrase(
-                String.format("%.2f", prueba.calcularPromedio()),
-                FONT_CAMPO
-        ));
-        celdaValor.setBackgroundColor(new BaseColor(240, 240, 240));
-        celdaValor.setPadding(5);
-        tabla.addCell(celdaValor);
-
-        // Fila de estado
-        celdaCampo = new PdfPCell(new Phrase("ESTADO:", FONT_CAMPO));
-        celdaCampo.setBackgroundColor(new BaseColor(240, 240, 240));
-        celdaCampo.setPadding(5);
-        tabla.addCell(celdaCampo);
-
-        Font fontEstado = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11,
-                prueba.estaAprobado() ? BaseColor.GREEN : BaseColor.RED);
-
-        celdaValor = new PdfPCell(new Phrase(prueba.obtenerEstado(), fontEstado));
-        celdaValor.setBackgroundColor(new BaseColor(240, 240, 240));
-        celdaValor.setPadding(5);
-        tabla.addCell(celdaValor);
+        agregarFilaTabla(tabla, "Reacción:", String.valueOf(p.getNotaReaccion()));
+        agregarFilaTabla(tabla, "Atención:", String.valueOf(p.getNotaAtencion()));
+        agregarFilaTabla(tabla, "Coordinación:", String.valueOf(p.getNotaCoordinacion()));
+        agregarFilaTabla(tabla, "Percepción:", String.valueOf(p.getNotaPercepcion()));
+        agregarFilaTabla(tabla, "Psicológica:", String.valueOf(p.getNotaPsicologica()));
 
         documento.add(tabla);
     }
 
-    /**
-     * Agrega el pie de página
-     */
+    // ===================== PIE DE PÁGINA =====================
     private static void agregarPiePagina(Document documento) throws DocumentException {
+
         documento.add(Chunk.NEWLINE);
 
-        // Línea separadora
         LineSeparator linea = new LineSeparator();
         linea.setLineColor(BaseColor.LIGHT_GRAY);
         documento.add(linea);
 
-        // Texto legal
-        Paragraph piePagina = new Paragraph(
-                "Este documento es generado electrónicamente por el Sistema de Licencias de Conducir del Ecuador.\n" +
-                        "Documento válido únicamente con sello y firma de la autoridad competente.",
+        Paragraph texto = new Paragraph(
+                "Documento generado electrónicamente por el Sistema de Licencias",
                 FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.GRAY)
         );
-        piePagina.setAlignment(Element.ALIGN_CENTER);
-        piePagina.setSpacingBefore(10);
-        documento.add(piePagina);
-
-        // Fecha de generación
-        Paragraph fechaGen = new Paragraph(
-                "Fecha de generación: " + java.time.LocalDateTime.now().format(
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
-                ),
-                FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.GRAY)
-        );
-        fechaGen.setAlignment(Element.ALIGN_CENTER);
-        documento.add(fechaGen);
+        texto.setAlignment(Element.ALIGN_CENTER);
+        documento.add(texto);
     }
 
-    /**
-     * Helper para agregar una fila a la tabla
-     */
     private static void agregarFilaTabla(PdfPTable tabla, String campo, String valor) {
-        PdfPCell celdaCampo = new PdfPCell(new Phrase(campo, FONT_CAMPO));
-        celdaCampo.setBorder(Rectangle.NO_BORDER);
-        celdaCampo.setPadding(5);
-        tabla.addCell(celdaCampo);
 
-        PdfPCell celdaValor = new PdfPCell(new Phrase(valor, FONT_NORMAL));
-        celdaValor.setBorder(Rectangle.NO_BORDER);
-        celdaValor.setPadding(5);
-        tabla.addCell(celdaValor);
+        if (valor == null) valor = "N/A";
+
+        PdfPCell c1 = new PdfPCell(new Phrase(campo, FONT_CAMPO));
+        c1.setBorder(Rectangle.NO_BORDER);
+        c1.setPadding(5);
+
+        PdfPCell c2 = new PdfPCell(new Phrase(valor, FONT_NORMAL));
+        c2.setBorder(Rectangle.NO_BORDER);
+        c2.setPadding(5);
+
+        tabla.addCell(c1);
+        tabla.addCell(c2);
     }
 }

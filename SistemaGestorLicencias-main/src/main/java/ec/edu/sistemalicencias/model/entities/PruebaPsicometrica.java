@@ -178,6 +178,7 @@ public class PruebaPsicometrica {
      * @return true si el promedio es mayor o igual a la nota de aprobación
      */
     public boolean estaAprobado() {
+
         return calcularPromedio() >= NOTA_APROBACION;
     }
 
