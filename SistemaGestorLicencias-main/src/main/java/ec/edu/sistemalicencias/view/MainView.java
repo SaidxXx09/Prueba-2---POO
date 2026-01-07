@@ -19,17 +19,13 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Vista principal del Sistema de Licencias de Conducir.
- * Contiene el menú principal con acceso a todos los módulos del sistema.
- *
- * @author Sistema Licencias Ecuador
- * @version 1.0
- */
 public class MainView extends JFrame {
 
     // Controlador del sistema
     private final LicenciaController controller;
+
+    // VARIABLE NUEVA PARA EL ROL
+    private final String rolUsuario;
 
     // Componentes de la interfaz
     private JPanel mainPanel;
@@ -42,15 +38,17 @@ public class MainView extends JFrame {
     private JButton btnSalir;
 
     /**
-     * Constructor de la vista principal
+     * Constructor MODIFICADO para recibir el Rol
      */
-    public MainView() {
+    public MainView(String rolUsuario) {
+        this.rolUsuario = rolUsuario; // Guardamos el rol
         this.controller = new LicenciaController();
 
-        // Inicializar componentes programáticamente
+        // Inicializar componentes
         inicializarComponentes();
 
-        setTitle("Sistema de Licencias de Conducir - Ecuador");
+        // Configuración de la ventana con el rol en el título
+        setTitle("Sistema de Licencias - Rol: " + rolUsuario);
         setContentPane(mainPanel);
         setSize(800, 600);
         setMinimumSize(new Dimension(800, 600));
@@ -59,11 +57,30 @@ public class MainView extends JFrame {
 
         configurarEventos();
         configurarEstilos();
+
+        // === APLICAR SEGURIDAD SEGÚN EL ROL ===
+        aplicarPermisos();
     }
 
     /**
-     * Inicializa todos los componentes de la interfaz gráfica
+     * MÉTODO NUEVO: Bloquea botones según el rol del usuario
      */
+    private void aplicarPermisos() {
+        if (rolUsuario != null && "ANALISTA".equalsIgnoreCase(rolUsuario)) {
+            // El Analista NO puede editar datos sensibles
+            btnGestionConductores.setEnabled(false);
+            btnValidarDocumentos.setEnabled(false);
+            btnPruebasPsicometricas.setEnabled(false);
+            btnEmitirLicencia.setEnabled(false);
+
+            // Visualmente indicamos que están deshabilitados (opcional)
+            String tooltip = "Acceso denegado para Analistas";
+            btnGestionConductores.setToolTipText(tooltip);
+            btnEmitirLicencia.setToolTipText(tooltip);
+        }
+        // Si es ADMINISTRADOR, todo se queda habilitado por defecto.
+    }
+
     private void inicializarComponentes() {
         // Panel principal
         mainPanel = new JPanel();
@@ -99,11 +116,6 @@ public class MainView extends JFrame {
                 TitledBorder.TOP,
                 new Font("Arial", Font.BOLD, 12)
         ));
-        ((EmptyBorder) BorderFactory.createEmptyBorder(10, 10, 10, 10)).getBorderInsets(panelModulos);
-        panelModulos.setBorder(BorderFactory.createCompoundBorder(
-                panelModulos.getBorder(),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
 
         // Crear botones
         btnGestionConductores = crearBoton("Gestión de Conductores");
@@ -128,7 +140,7 @@ public class MainView extends JFrame {
         JPanel panelPie = new JPanel();
         panelPie.setBorder(new EmptyBorder(10, 0, 0, 0));
 
-        JLabel lblVersion = new JLabel("Sistema de Licencias v1.0 - Desarrollado con Java y MySQL");
+        JLabel lblVersion = new JLabel("Sistema de Licencias v2.0 - Cloud Edition (Railway)");
         lblVersion.setFont(new Font("Arial", Font.PLAIN, 10));
         lblVersion.setForeground(Color.GRAY);
         panelPie.add(lblVersion);
@@ -139,12 +151,6 @@ public class MainView extends JFrame {
         mainPanel.add(panelPie, BorderLayout.SOUTH);
     }
 
-    /**
-     * Crea un botón con estilo uniforme
-     *
-     * @param texto Texto del botón
-     * @return JButton configurado
-     */
     private JButton crearBoton(String texto) {
         JButton boton = new JButton(texto);
         boton.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -153,43 +159,22 @@ public class MainView extends JFrame {
         return boton;
     }
 
-    /**
-     * Configura los eventos de los botones del menú principal
-     */
     private void configurarEventos() {
-        // Botón Gestión de Conductores
         btnGestionConductores.addActionListener(e -> abrirGestionConductores());
-
-        // Botón Validar Documentos
         btnValidarDocumentos.addActionListener(e -> abrirValidarDocumentos());
-
-        // Botón Pruebas Psicométricas
         btnPruebasPsicometricas.addActionListener(e -> abrirPruebasPsicometricas());
-
-        // Botón Emitir Licencia
         btnEmitirLicencia.addActionListener(e -> abrirEmitirLicencia());
-
-        // Botón Consultar Licencias
         btnConsultarLicencias.addActionListener(e -> abrirConsultarLicencias());
-
-        // Botón Generar Documento PDF
         btnGenerarDocumento.addActionListener(e -> generarDocumentoPDF());
-
-        // Botón Salir
         btnSalir.addActionListener(e -> salirAplicacion());
     }
 
-    /**
-     * Configura los estilos adicionales de los componentes
-     */
     private void configurarEstilos() {
-        // Estilo del botón de salir (color rojo)
         btnSalir.setBackground(new Color(220, 53, 69));
         btnSalir.setForeground(Color.WHITE);
         btnSalir.setOpaque(true);
         btnSalir.setBorderPainted(false);
 
-        // Cursor de mano para todos los botones
         btnGestionConductores.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnValidarDocumentos.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnPruebasPsicometricas.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -199,9 +184,8 @@ public class MainView extends JFrame {
         btnSalir.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
-    /**
-     * Abre la ventana de Gestión de Conductores
-     */
+    // --- MÉTODOS DE NAVEGACIÓN ---
+
     private void abrirGestionConductores() {
         try {
             GestionConductoresView gestionView = new GestionConductoresView(controller);
@@ -211,9 +195,6 @@ public class MainView extends JFrame {
         }
     }
 
-    /**
-     * Abre la ventana de Validar Documentos
-     */
     private void abrirValidarDocumentos() {
         try {
             ValidarDocumentosView validarView = new ValidarDocumentosView(controller);
@@ -223,9 +204,6 @@ public class MainView extends JFrame {
         }
     }
 
-    /**
-     * Abre la ventana de Pruebas Psicométricas
-     */
     private void abrirPruebasPsicometricas() {
         try {
             PruebasPsicometricasView pruebasView = new PruebasPsicometricasView(controller);
@@ -235,9 +213,6 @@ public class MainView extends JFrame {
         }
     }
 
-    /**
-     * Abre la ventana de Emitir Licencia
-     */
     private void abrirEmitirLicencia() {
         try {
             EmitirLicenciaView emitirView = new EmitirLicenciaView(controller);
@@ -247,9 +222,6 @@ public class MainView extends JFrame {
         }
     }
 
-    /**
-     * Abre la ventana de Consultar Licencias
-     */
     private void abrirConsultarLicencias() {
         try {
             ConsultarLicenciasView consultarView = new ConsultarLicenciasView(controller);
@@ -259,12 +231,8 @@ public class MainView extends JFrame {
         }
     }
 
-    /**
-     * Genera un documento PDF de una licencia seleccionada
-     */
     private void generarDocumentoPDF() {
         try {
-            // Solicitar cédula del conductor
             String cedula = JOptionPane.showInputDialog(
                     this,
                     "Ingrese la cédula del conductor para generar el PDF:",
@@ -272,31 +240,23 @@ public class MainView extends JFrame {
                     JOptionPane.QUESTION_MESSAGE
             );
 
-            if (cedula == null || cedula.trim().isEmpty()) {
-                return; // Usuario canceló
-            }
+            if (cedula == null || cedula.trim().isEmpty()) return;
 
-            // Buscar conductor
             Conductor conductor = controller.buscarConductorPorCedula(cedula.trim());
             if (conductor == null) {
                 mostrarError("No se encontró un conductor con la cédula: " + cedula);
                 return;
             }
 
-            // Buscar licencias del conductor
             List<Licencia> licencias = controller.obtenerLicenciasConductor(conductor.getId());
             if (licencias == null || licencias.isEmpty()) {
                 mostrarError("El conductor no tiene licencias emitidas.");
                 return;
             }
 
-            // Si hay múltiples licencias, usar la más reciente
             Licencia licencia = licencias.get(0);
-
-            // Obtener última prueba aprobada (puede ser null)
             PruebaPsicometrica prueba = controller.obtenerUltimaPruebaAprobada(conductor.getId());
 
-            // Seleccionar ubicación para guardar
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Guardar Licencia PDF");
             fileChooser.setSelectedFile(new File("Licencia_" + conductor.getCedula() + ".pdf"));
@@ -304,30 +264,17 @@ public class MainView extends JFrame {
             int resultado = fileChooser.showSaveDialog(this);
             if (resultado == JFileChooser.APPROVE_OPTION) {
                 String rutaArchivo = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!rutaArchivo.toLowerCase().endsWith(".pdf")) rutaArchivo += ".pdf";
 
-                // Asegurar extensión .pdf
-                if (!rutaArchivo.toLowerCase().endsWith(".pdf")) {
-                    rutaArchivo += ".pdf";
-                }
-
-                // Generar PDF
                 PDFGenerator.generarLicenciaPDF(licencia, conductor, prueba, rutaArchivo);
 
                 mostrarExito("Documento PDF generado exitosamente:\n" + rutaArchivo);
-
-                // Preguntar si desea abrir el archivo
-                int abrir = JOptionPane.showConfirmDialog(
-                        this,
-                        "¿Desea abrir el documento generado?",
-                        "Abrir PDF",
-                        JOptionPane.YES_NO_OPTION
-                );
+                int abrir = JOptionPane.showConfirmDialog(this, "¿Desea abrir el documento?", "Abrir PDF", JOptionPane.YES_NO_OPTION);
 
                 if (abrir == JOptionPane.YES_OPTION) {
                     Desktop.getDesktop().open(new File(rutaArchivo));
                 }
             }
-
         } catch (LicenciaException ex) {
             mostrarError("Error al generar PDF: " + ex.getMessage());
         } catch (Exception ex) {
@@ -336,162 +283,27 @@ public class MainView extends JFrame {
         }
     }
 
-    /**
-     * Cierra la aplicación con confirmación
-     */
     private void salirAplicacion() {
-        int opcion = JOptionPane.showConfirmDialog(
-                this,
-                "¿Está seguro que desea salir del sistema?",
-                "Confirmar Salida",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (opcion == JOptionPane.YES_OPTION) {
-            System.exit(0);
-        }
+        int opcion = JOptionPane.showConfirmDialog(this, "¿Está seguro que desea salir?", "Confirmar Salida", JOptionPane.YES_NO_OPTION);
+        if (opcion == JOptionPane.YES_OPTION) System.exit(0);
     }
 
-    /**
-     * Muestra un mensaje de error
-     *
-     * @param mensaje Mensaje a mostrar
-     */
     private void mostrarError(String mensaje) {
-        JOptionPane.showMessageDialog(
-                this,
-                mensaje,
-                "Error",
-                JOptionPane.ERROR_MESSAGE
-        );
+        JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    /**
-     * Muestra un mensaje de éxito
-     *
-     * @param mensaje Mensaje a mostrar
-     */
     private void mostrarExito(String mensaje) {
-        JOptionPane.showMessageDialog(
-                this,
-                mensaje,
-                "Éxito",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        JOptionPane.showMessageDialog(this, mensaje, "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    // CÓDIGO GENERADO POR INTELLIJ IDEA (NO EDITAR)
+    // Se mantiene para compatibilidad con el diseñador, aunque inicializarComponentes hace el trabajo pesado.
     {
-// GUI initializer generated by IntelliJ IDEA GUI Designer
-// >>> IMPORTANT!! <<<
-// DO NOT EDIT OR ADD ANY CODE HERE!
         $$$setupUI$$$();
     }
-
-    /**
-     * Method generated by IntelliJ IDEA GUI Designer
-     * >>> IMPORTANT!! <<<
-     * DO NOT edit this method OR call it in your code!
-     *
-     * @noinspection ALL
-     */
     private void $$$setupUI$$$() {
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayoutManager(3, 1, new Insets(20, 20, 20, 20), -1, -1));
-        mainPanel.setMinimumSize(new Dimension(800, 600));
-        mainPanel.setPreferredSize(new Dimension(800, 600));
-        final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 20, 0), -1, -1));
-        mainPanel.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
-        final JLabel label1 = new JLabel();
-        Font label1Font = this.$$$getFont$$$("Arial", Font.BOLD, 24, label1.getFont());
-        if (label1Font != null) label1.setFont(label1Font);
-        label1.setForeground(new Color(-14121484));
-        label1.setText("SISTEMA DE LICENCIAS DE CONDUCIR - ECUADOR");
-        panel1.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label2 = new JLabel();
-        Font label2Font = this.$$$getFont$$$("Arial", -1, 14, label2.getFont());
-        if (label2Font != null) label2.setFont(label2Font);
-        label2.setText("Agencia Nacional de Tránsito");
-        panel1.add(label2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(4, 2, new Insets(10, 10, 10, 10), -1, -1));
-        mainPanel.add(panel2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        panel2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Módulos del Sistema", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
-        btnGestionConductores = new JButton();
-        Font btnGestionConductoresFont = this.$$$getFont$$$("Arial", -1, 14, btnGestionConductores.getFont());
-        if (btnGestionConductoresFont != null) btnGestionConductores.setFont(btnGestionConductoresFont);
-        btnGestionConductores.setText("Gestión de Conductores");
-        panel2.add(btnGestionConductores, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 80), null, 0, false));
-        btnValidarDocumentos = new JButton();
-        Font btnValidarDocumentosFont = this.$$$getFont$$$("Arial", -1, 14, btnValidarDocumentos.getFont());
-        if (btnValidarDocumentosFont != null) btnValidarDocumentos.setFont(btnValidarDocumentosFont);
-        btnValidarDocumentos.setText("Validar Documentos");
-        panel2.add(btnValidarDocumentos, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 80), null, 0, false));
-        btnPruebasPsicometricas = new JButton();
-        Font btnPruebasPsicometricasFont = this.$$$getFont$$$("Arial", -1, 14, btnPruebasPsicometricas.getFont());
-        if (btnPruebasPsicometricasFont != null) btnPruebasPsicometricas.setFont(btnPruebasPsicometricasFont);
-        btnPruebasPsicometricas.setText("Pruebas Psicométricas");
-        panel2.add(btnPruebasPsicometricas, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 80), null, 0, false));
-        btnEmitirLicencia = new JButton();
-        Font btnEmitirLicenciaFont = this.$$$getFont$$$("Arial", -1, 14, btnEmitirLicencia.getFont());
-        if (btnEmitirLicenciaFont != null) btnEmitirLicencia.setFont(btnEmitirLicenciaFont);
-        btnEmitirLicencia.setText("Emitir Licencia");
-        panel2.add(btnEmitirLicencia, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 80), null, 0, false));
-        btnConsultarLicencias = new JButton();
-        Font btnConsultarLicenciasFont = this.$$$getFont$$$("Arial", -1, 14, btnConsultarLicencias.getFont());
-        if (btnConsultarLicenciasFont != null) btnConsultarLicencias.setFont(btnConsultarLicenciasFont);
-        btnConsultarLicencias.setText("Consultar Licencias");
-        panel2.add(btnConsultarLicencias, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 80), null, 0, false));
-        btnGenerarDocumento = new JButton();
-        Font btnGenerarDocumentoFont = this.$$$getFont$$$("Arial", -1, 14, btnGenerarDocumento.getFont());
-        if (btnGenerarDocumentoFont != null) btnGenerarDocumento.setFont(btnGenerarDocumentoFont);
-        btnGenerarDocumento.setText("Generar Documento PDF");
-        panel2.add(btnGenerarDocumento, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 80), null, 0, false));
-        btnSalir = new JButton();
-        btnSalir.setBackground(new Color(-2104859));
-        Font btnSalirFont = this.$$$getFont$$$("Arial", Font.BOLD, 14, btnSalir.getFont());
-        if (btnSalirFont != null) btnSalir.setFont(btnSalirFont);
-        btnSalir.setForeground(new Color(-1));
-        btnSalir.setText("Salir");
-        panel2.add(btnSalir, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, 50), null, 0, false));
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(10, 0, 0, 0), -1, -1));
-        mainPanel.add(panel3, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
-        final JLabel label3 = new JLabel();
-        Font label3Font = this.$$$getFont$$$("Arial", -1, 10, label3.getFont());
-        if (label3Font != null) label3.setFont(label3Font);
-        label3.setForeground(new Color(-6710887));
-        label3.setText("Sistema de Licencias v1.0 - Desarrollado con Java y MySQL");
-        panel3.add(label3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        // Código generado por IntelliJ (si lo tienes vacío o diferente, no importa
+        // porque tu método inicializarComponentes() construye la interfaz manualmente)
     }
-
-    /**
-     * @noinspection ALL
-     */
-    private Font $$$getFont$$$(String fontName, int style, int size, Font currentFont) {
-        if (currentFont == null) return null;
-        String resultName;
-        if (fontName == null) {
-            resultName = currentFont.getName();
-        } else {
-            Font testFont = new Font(fontName, Font.PLAIN, 10);
-            if (testFont.canDisplay('a') && testFont.canDisplay('1')) {
-                resultName = fontName;
-            } else {
-                resultName = currentFont.getName();
-            }
-        }
-        Font font = new Font(resultName, style >= 0 ? style : currentFont.getStyle(), size >= 0 ? size : currentFont.getSize());
-        boolean isMac = System.getProperty("os.name", "").toLowerCase(Locale.ENGLISH).startsWith("mac");
-        Font fontWithFallback = isMac ? new Font(font.getFamily(), font.getStyle(), font.getSize()) : new StyleContext().getFont(font.getFamily(), font.getStyle(), font.getSize());
-        return fontWithFallback instanceof FontUIResource ? fontWithFallback : new FontUIResource(fontWithFallback);
-    }
-
-    /**
-     * @noinspection ALL
-     */
-    public JComponent $$$getRootComponent$$$() {
-        return mainPanel;
-    }
+    public JComponent $$$getRootComponent$$$() { return mainPanel; }
 }
