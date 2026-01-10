@@ -10,33 +10,17 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para la entidad Licencia.
- * Gestiona la persistencia de las licencias de conducir.
- *
- * @author Sistema Licencias Ecuador
- * @version 1.0
- */
 public class LicenciaDAO implements Persistible<Licencia> {
 
     private final DatabaseConfig dbConfig;
 
-    /**
-     * Constructor
-     */
     public LicenciaDAO() {
         this.dbConfig = DatabaseConfig.getInstance();
     }
 
-    /**
-     * Guarda o actualiza una licencia
-     * @param licencia Licencia a persistir
-     * @return ID de la licencia guardada
-     * @throws BaseDatosException Si ocurre un error
-     */
     @Override
     public Long guardar(Licencia licencia) throws BaseDatosException {
-        if (licencia.getId() == null) {
+        if (licencia.getId() == null || licencia.getId() == 0) {
             return insertar(licencia);
         } else {
             actualizar(licencia);
@@ -44,16 +28,10 @@ public class LicenciaDAO implements Persistible<Licencia> {
         }
     }
 
-    /**
-     * Inserta una nueva licencia
-     * @param licencia Licencia a insertar
-     * @return ID generado
-     * @throws BaseDatosException Si ocurre un error
-     */
     private Long insertar(Licencia licencia) throws BaseDatosException {
-        String sql = "INSERT INTO licencias (numero_licencia, conductor_id, tipo_licencia, " +
-                "fecha_emision, fecha_vencimiento, activa, prueba_psicometrica_id, observaciones) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO licencias (conductor_id, tipo_licencia, " +
+                "fecha_emision, fecha_vencimiento, estado, puntos, costo) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -63,20 +41,30 @@ public class LicenciaDAO implements Persistible<Licencia> {
             conn = dbConfig.obtenerConexion();
             stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            stmt.setString(1, licencia.getNumeroLicencia());
-            stmt.setLong(2, licencia.getConductorId());
-            stmt.setString(3, licencia.getTipoLicencia());
-            stmt.setDate(4, Date.valueOf(licencia.getFechaEmision()));
-            stmt.setDate(5, Date.valueOf(licencia.getFechaVencimiento()));
-            stmt.setBoolean(6, licencia.isActiva());
+            stmt.setLong(1, licencia.getConductorId());
 
-            if (licencia.getPruebaPsicometricaId() != null) {
-                stmt.setLong(7, licencia.getPruebaPsicometricaId());
-            } else {
-                stmt.setNull(7, Types.BIGINT);
+
+            String tipoJava = licencia.getTipoLicencia();
+            String tipoParaBD = tipoJava;
+
+            if (tipoJava != null && tipoJava.contains("_")) {
+                
+                tipoParaBD = tipoJava.substring(tipoJava.lastIndexOf("_") + 1);
             }
+            stmt.setString(2, tipoParaBD);
+           
 
-            stmt.setString(8, licencia.getObservaciones());
+            LocalDate emision = licencia.getFechaEmision() != null ? licencia.getFechaEmision() : LocalDate.now();
+            LocalDate vencimiento = licencia.getFechaVencimiento() != null ? licencia.getFechaVencimiento() : emision.plusYears(5);
+
+            stmt.setDate(3, Date.valueOf(emision));
+            stmt.setDate(4, Date.valueOf(vencimiento));
+
+            String estadoCorto = licencia.isActiva() ? "ACT" : "INA";
+            stmt.setString(5, estadoCorto);
+
+            stmt.setInt(6, 30);
+            stmt.setDouble(7, 60.00);
 
             int filasAfectadas = stmt.executeUpdate();
 
@@ -88,300 +76,147 @@ public class LicenciaDAO implements Persistible<Licencia> {
             if (rs.next()) {
                 return rs.getLong(1);
             } else {
-                throw new BaseDatosException("No se pudo obtener el ID generado");
+                throw new BaseDatosException("No se generó ID");
             }
 
         } catch (SQLException e) {
-            throw new BaseDatosException("Error al insertar licencia: " + e.getMessage(), e);
+            e.printStackTrace();
+            throw new BaseDatosException("Error SQL: " + e.getMessage(), e);
         } finally {
             cerrarRecursos(conn, stmt, rs);
         }
     }
 
-    /**
-     * Actualiza una licencia existente
-     * @param licencia Licencia a actualizar
-     * @throws BaseDatosException Si ocurre un error
-     */
     private void actualizar(Licencia licencia) throws BaseDatosException {
-        String sql = "UPDATE licencias SET numero_licencia = ?, conductor_id = ?, " +
-                "tipo_licencia = ?, fecha_emision = ?, fecha_vencimiento = ?, " +
-                "activa = ?, prueba_psicometrica_id = ?, observaciones = ? WHERE id = ?";
+        String sql = "UPDATE licencias SET estado = ? WHERE id = ?";
+        try (Connection conn = dbConfig.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        Connection conn = null;
-        PreparedStatement stmt = null;
-
-        try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setString(1, licencia.getNumeroLicencia());
-            stmt.setLong(2, licencia.getConductorId());
-            stmt.setString(3, licencia.getTipoLicencia());
-            stmt.setDate(4, Date.valueOf(licencia.getFechaEmision()));
-            stmt.setDate(5, Date.valueOf(licencia.getFechaVencimiento()));
-            stmt.setBoolean(6, licencia.isActiva());
-
-            if (licencia.getPruebaPsicometricaId() != null) {
-                stmt.setLong(7, licencia.getPruebaPsicometricaId());
-            } else {
-                stmt.setNull(7, Types.BIGINT);
-            }
-
-            stmt.setString(8, licencia.getObservaciones());
-            stmt.setLong(9, licencia.getId());
-
-            int filasAfectadas = stmt.executeUpdate();
-
-            if (filasAfectadas == 0) {
-                throw new BaseDatosException("No se encontró la licencia con ID: " + licencia.getId());
-            }
-
+            String estadoCorto = licencia.isActiva() ? "ACT" : "INA";
+            stmt.setString(1, estadoCorto);
+            stmt.setLong(2, licencia.getId());
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new BaseDatosException("Error al actualizar licencia: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, null);
+            throw new BaseDatosException("Error actualizando: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Busca una licencia por ID
-     * @param id ID de la licencia
-     * @return Licencia encontrada o null
-     * @throws BaseDatosException Si ocurre un error
-     */
     @Override
     public Licencia buscarPorId(Long id) throws BaseDatosException {
         String sql = "SELECT * FROM licencias WHERE id = ?";
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
+        try (Connection conn = dbConfig.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
-
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return mapearResultSet(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return mapearResultSet(rs);
             }
-
-            return null;
-
         } catch (SQLException e) {
-            throw new BaseDatosException("Error al buscar licencia por ID: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
+            throw new BaseDatosException("Error buscando ID: " + e.getMessage(), e);
         }
+        return null;
     }
 
-    /**
-     * Busca una licencia por número
-     * @param numeroLicencia Número de licencia
-     * @return Licencia encontrada o null
-     * @throws BaseDatosException Si ocurre un error
-     */
     public Licencia buscarPorNumero(String numeroLicencia) throws BaseDatosException {
-        String sql = "SELECT * FROM licencias WHERE numero_licencia = ?";
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
         try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, numeroLicencia);
-
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return mapearResultSet(rs);
-            }
-
+            Long id = Long.parseLong(numeroLicencia);
+            return buscarPorId(id);
+        } catch (NumberFormatException e) {
             return null;
-
-        } catch (SQLException e) {
-            throw new BaseDatosException("Error al buscar licencia por número: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
     }
 
-    /**
-     * Busca licencias por conductor
-     * @param conductorId ID del conductor
-     * @return Lista de licencias del conductor
-     * @throws BaseDatosException Si ocurre un error
-     */
     public List<Licencia> buscarPorConductor(Long conductorId) throws BaseDatosException {
         String sql = "SELECT * FROM licencias WHERE conductor_id = ? ORDER BY fecha_emision DESC";
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<Licencia> licencias = new ArrayList<>();
-
-        try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
+        List<Licencia> lista = new ArrayList<>();
+        try (Connection conn = dbConfig.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, conductorId);
-
-            rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                licencias.add(mapearResultSet(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Licencia l = mapearResultSet(rs);
+                    if (l != null) lista.add(l); 
+                }
             }
-
-            return licencias;
-
         } catch (SQLException e) {
-            throw new BaseDatosException("Error al buscar licencias por conductor: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
+            throw new BaseDatosException("Error buscando por conductor: " + e.getMessage(), e);
         }
+        return lista;
     }
 
-    /**
-     * Obtiene todas las licencias
-     * @return Lista de licencias
-     * @throws BaseDatosException Si ocurre un error
-     */
     public List<Licencia> obtenerTodas() throws BaseDatosException {
         String sql = "SELECT * FROM licencias ORDER BY fecha_emision DESC";
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<Licencia> licencias = new ArrayList<>();
-
-        try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            rs = stmt.executeQuery();
-
+        List<Licencia> lista = new ArrayList<>();
+        try (Connection conn = dbConfig.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                licencias.add(mapearResultSet(rs));
+                Licencia l = mapearResultSet(rs);
+                if (l != null) lista.add(l);
             }
-
-            return licencias;
-
-        } catch (SQLException e) {
-            throw new BaseDatosException("Error al obtener licencias: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
-        }
+        } catch (SQLException e) { throw new BaseDatosException(e.getMessage(), e); }
+        return lista;
     }
 
-    /**
-     * Obtiene licencias vigentes
-     * @return Lista de licencias vigentes
-     * @throws BaseDatosException Si ocurre un error
-     */
     public List<Licencia> obtenerLicenciasVigentes() throws BaseDatosException {
-        String sql = "SELECT * FROM licencias WHERE activa = TRUE AND fecha_vencimiento > CURDATE() " +
-                "ORDER BY fecha_vencimiento";
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<Licencia> licencias = new ArrayList<>();
-
-        try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            rs = stmt.executeQuery();
-
+        String sql = "SELECT * FROM licencias WHERE estado = 'ACT' AND fecha_vencimiento > CURRENT_DATE";
+        List<Licencia> lista = new ArrayList<>();
+        try (Connection conn = dbConfig.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                licencias.add(mapearResultSet(rs));
+                Licencia l = mapearResultSet(rs);
+                if (l != null) lista.add(l);
+            }
+        } catch (SQLException e) { throw new BaseDatosException(e.getMessage(), e); }
+        return lista;
+    }
+
+    @Override
+    public boolean eliminar(Long id) throws BaseDatosException { return false; }
+
+   
+    private Licencia mapearResultSet(ResultSet rs) throws SQLException {
+        try {
+            Licencia l = new Licencia();
+            l.setId(rs.getLong("id"));
+            l.setNumeroLicencia(String.valueOf(rs.getLong("id")));
+            l.setConductorId(rs.getLong("conductor_id"));
+
+           
+            
+            String tipoBD = rs.getString("tipo_licencia");
+
+            
+            if (tipoBD == null || tipoBD.trim().isEmpty() || tipoBD.equals("TIPO_")) {
+                tipoBD = "B"; // Valor por defecto seguro
             }
 
-            return licencias;
+            
+            if (!tipoBD.startsWith("TIPO_")) {
+                l.setTipoLicencia("TIPO_" + tipoBD);
+            } else {
+                l.setTipoLicencia(tipoBD);
+            }
+           
 
-        } catch (SQLException e) {
-            throw new BaseDatosException("Error al obtener licencias vigentes: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
+            Date fEmision = rs.getDate("fecha_emision");
+            if (fEmision != null) l.setFechaEmision(fEmision.toLocalDate());
+
+            Date fVenc = rs.getDate("fecha_vencimiento");
+            if (fVenc != null) l.setFechaVencimiento(fVenc.toLocalDate());
+
+            String estado = rs.getString("estado");
+            l.setActiva(estado != null && (estado.startsWith("ACT") || estado.startsWith("VIG")));
+
+            return l;
+        } catch (Exception e) {
+            
+            System.err.println("Saltando licencia corrupta ID " + rs.getLong("id") + ": " + e.getMessage());
+            return null;
         }
     }
 
-    /**
-     * Elimina una licencia
-     * @param id ID de la licencia a eliminar
-     * @return true si se eliminó correctamente
-     * @throws BaseDatosException Si ocurre un error
-     */
-    @Override
-    public boolean eliminar(Long id) throws BaseDatosException {
-        String sql = "DELETE FROM licencias WHERE id = ?";
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-
-        try {
-            conn = dbConfig.obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setLong(1, id);
-
-            int filasAfectadas = stmt.executeUpdate();
-            return filasAfectadas > 0;
-
-        } catch (SQLException e) {
-            throw new BaseDatosException("Error al eliminar licencia: " + e.getMessage(), e);
-        } finally {
-            cerrarRecursos(conn, stmt, null);
-        }
-    }
-
-    /**
-     * Mapea un ResultSet a un objeto Licencia
-     * @param rs ResultSet
-     * @return Objeto Licencia
-     * @throws SQLException Si ocurre un error
-     */
-    private Licencia mapearResultSet(ResultSet rs) throws SQLException {
-        Licencia licencia = new Licencia();
-
-        licencia.setId(rs.getLong("id"));
-        licencia.setNumeroLicencia(rs.getString("numero_licencia"));
-        licencia.setConductorId(rs.getLong("conductor_id"));
-        licencia.setTipoLicencia(rs.getString("tipo_licencia"));
-
-        Date fechaEmision = rs.getDate("fecha_emision");
-        if (fechaEmision != null) {
-            licencia.setFechaEmision(fechaEmision.toLocalDate());
-        }
-
-        Date fechaVencimiento = rs.getDate("fecha_vencimiento");
-        if (fechaVencimiento != null) {
-            licencia.setFechaVencimiento(fechaVencimiento.toLocalDate());
-        }
-
-        licencia.setActiva(rs.getBoolean("activa"));
-
-        long pruebaId = rs.getLong("prueba_psicometrica_id");
-        if (!rs.wasNull()) {
-            licencia.setPruebaPsicometricaId(pruebaId);
-        }
-
-        licencia.setObservaciones(rs.getString("observaciones"));
-
-        return licencia;
-    }
-
-    /**
-     * Cierra recursos de base de datos
-     */
     private void cerrarRecursos(Connection conn, Statement stmt, ResultSet rs) {
-        try {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-            if (conn != null) conn.close();
-        } catch (SQLException e) {
-            System.err.println("Error al cerrar recursos: " + e.getMessage());
-        }
+        try { if(rs!=null) rs.close(); if(stmt!=null) stmt.close(); if(conn!=null) conn.close(); } catch(Exception e){}
     }
 }
